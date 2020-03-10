@@ -29,6 +29,12 @@ SOFTWARE.
 #define I2C          42
 #define PWM          43
 
+void debug_message(const int level,const char* file,const int lineno,const char* fmt,...);
+
+#define DEBUG(...)  do{debug_message(2,__FILE__,__LINE__,__VA_ARGS__);}while(0)
+#define INFO(...)   do{debug_message(1,__FILE__,__LINE__,__VA_ARGS__);}while(0)
+#define ERROR(...)  do{debug_message(0,__FILE__,__LINE__,__VA_ARGS__);}while(0)
+
 int gpio_mode;
 const int pin_to_gpio_rev1[27];
 const int pin_to_gpio_rev2[27];

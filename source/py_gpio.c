@@ -136,6 +136,7 @@ static PyObject *py_setup_channel(PyObject *self, PyObject *args, PyObject *kwar
 
    if (get_gpio_number(channel, &gpio))
       return NULL;
+   DEBUG("gpio [%d]", gpio);
 
    if (direction != INPUT && direction != OUTPUT)
    {
@@ -336,9 +337,12 @@ static PyObject *py_add_event_callback(PyObject *self, PyObject *args, PyObject 
       return NULL;
    }
 
-   if (get_gpio_number(channel, &gpio))
-       return NULL;
-       
+   if (get_gpio_number(channel, &gpio)){
+      DEBUG(" gpio error [%d]", channel);
+      return NULL;
+   }
+   DEBUG("gpio [%d]", gpio);
+
    // check channel is set up as an input
    if (gpio_direction[gpio] != INPUT)
    {
@@ -662,8 +666,7 @@ PyMODINIT_FUNC initGPIO(void)
     boardId = getBoardType(&retBoardInfo);
     if (boardId >= 0) {
       if (boardId > ALLWINNER_BASE && boardId <= ALLWINNER_MAX 
-                && boardId != NanoPi_A64
-                && boardId != NanoPi_NEO_Core) {
+                && boardId != NanoPi_A64) {
         revision = 1;
       } else {
          PyErr_SetString(PyExc_RuntimeError, "This NanoPi model is currently not supported. ");

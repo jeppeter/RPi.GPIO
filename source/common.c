@@ -257,3 +257,79 @@ int get_gpio_number(int channel, unsigned int *gpio)
 		printf("GPIO = %d\n", *gpio);
     return 0;
 }
+
+
+#define SPRINTF_SAFE(...)                                                                         \
+    do{                                                                                           \
+        ret = snprintf(pcurptr,leftlen,__VA_ARGS__);                                              \
+        if (ret < 0 || ret >= (leftlen - 1)) {                                                    \
+            bufsize <<= 1;                                                                        \
+            goto try_again;                                                                       \
+        }                                                                                         \
+        pcurptr += ret;                                                                           \
+        leftlen -= ret;                                                                           \
+    }while(0)
+
+void debug_message(const int level,const char* file,const int lineno,const char* fmt,...)
+{
+    char* fmtbuf=NULL;
+    int bufsize=256;
+    int ret;
+    va_list ap,oldap;
+    char* pcurptr=NULL;
+    int leftlen=0;
+
+    if (fmt) {
+        va_start(ap,fmt);
+        va_copy(oldap,ap);
+    }
+
+try_again:
+    if (fmtbuf) {
+        free(fmtbuf);
+    }
+    fmtbuf = NULL;
+    fmtbuf = malloc(bufsize);
+    if (fmtbuf == NULL) {
+        goto out;
+    }
+    memset(fmtbuf,0,bufsize);
+    pcurptr = fmtbuf;
+    leftlen = bufsize;
+    
+    SPRINTF_SAFE("[%s:%d] ",file,lineno);
+
+    switch(level){
+        case 0:
+            SPRINTF_SAFE("ERROR ");
+            break;
+        case 1:
+            SPRINTF_SAFE("INFO ");
+            break;
+        default:
+            SPRINTF_SAFE("DEBUG ");
+            break;
+    }
+
+    if (fmt) {
+        va_copy(ap,oldap);
+        ret = vsnprintf(pcurptr,leftlen,fmt,ap);
+        if (ret < 0 || ret >= (leftlen - 1)) {
+            bufsize <<= 1;
+            goto try_again;
+        }
+        pcurptr += ret;
+        leftlen -= ret;
+    }
+
+    SPRINTF_SAFE("\n");
+    fprintf(stderr,"%s",fmtbuf);
+
+out:
+    if (fmtbuf) {
+        free(fmtbuf);
+    }
+    fmtbuf = NULL;
+    return;
+
+}
